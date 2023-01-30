@@ -9,7 +9,7 @@ using System.Drawing;
 namespace SynStandardLightingTemplate
 {
     public class Settings {
-        public byte Color = 5;
+        public byte Color = 15;
     }
     internal class Program
     {
