@@ -1,20 +1,27 @@
 using System;
 using System.Threading.Tasks;
+using System.Drawing;
+using System.Collections.Generic;
+
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
-using System.Drawing;
 
 namespace SynStandardLightingTemplate
 {
-    public class Settings {
+    public class Settings
+    {
         public byte Color = 15;
+        public List<string> IgnoredCells = new() {
+            "WindhelmPalaceUpstairs01",
+            "WindhelmPalaceUpstairs02",
+        };
     }
     internal class Program
     {
         public static Lazy<Settings>? LazySettings;
-        public static Settings settings => LazySettings!.Value;
+        public static Settings Config => LazySettings!.Value;
         public static Color ColorSet;
         public static CellLighting.Inherit cl = CellLighting.Inherit.AmbientColor | CellLighting.Inherit.DirectionalColor | CellLighting.Inherit.FogColor |
                     CellLighting.Inherit.FogNear | CellLighting.Inherit.FogFar | CellLighting.Inherit.DirectionalRotation | CellLighting.Inherit.DirectionalFade |
@@ -29,7 +36,7 @@ namespace SynStandardLightingTemplate
         }
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            ColorSet = Color.FromArgb(settings.Color, settings.Color, settings.Color);
+            ColorSet = Color.FromArgb(Config.Color, Config.Color, Config.Color);
             foreach (var lt in state.LoadOrder.PriorityOrder.LightingTemplate().WinningContextOverrides())
             {
                 Console.WriteLine($"Patching LIGHTING TEMPLATE {lt.Record.EditorID}");
@@ -39,8 +46,8 @@ namespace SynStandardLightingTemplate
                 nlt.FogNear = 0;
                 nlt.FogFar = 0;
                 nlt.DirectionalFade = 0;
-                nlt.FogPower = 0;
-                nlt.FogMax = 0;
+                nlt.FogPower = 1;
+                nlt.FogMax = 1;
                 nlt.FogClipDistance = 0;
                 nlt.LightFadeEndDistance = 41000;
                 nlt.LightFadeStartDistance = 30000;
@@ -48,27 +55,32 @@ namespace SynStandardLightingTemplate
                 nlt.DirectionalColor = ColorSet;
                 nlt.FogNearColor = ColorSet;
                 nlt.FogFarColor = ColorSet;
-                nlt.AmbientColors.Scale = 0;
-                nlt.AmbientColors.Specular = ColorSet;
-                nlt.AmbientColors.DirectionalXMinus = ColorSet;
-                nlt.AmbientColors.DirectionalXPlus = ColorSet;
-                nlt.AmbientColors.DirectionalYMinus = ColorSet;
-                nlt.AmbientColors.DirectionalYPlus = ColorSet;
-                nlt.AmbientColors.DirectionalZMinus = ColorSet;
-                nlt.AmbientColors.DirectionalZPlus = ColorSet;
-                nlt.DirectionalAmbientColors = new();
-                nlt.DirectionalAmbientColors.Scale = 0;
-                nlt.DirectionalAmbientColors.Specular = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalXMinus = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalXPlus = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalYMinus = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalYPlus = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalZMinus = ColorSet;
-                nlt.DirectionalAmbientColors.DirectionalZPlus = ColorSet;
+                nlt.AmbientColors = new()
+                {
+                    Scale = 0,
+                    Specular = ColorSet,
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                };
+                nlt.DirectionalAmbientColors = new()
+                {
+                    Scale = 0,
+                    Specular = ColorSet,
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                };
             }
             foreach (var cel in state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache))
             {
-                if (cel.Record != null && cel.Record.Lighting != null && (cel.Record.LightingTemplate.IsNull || cel.Record.Lighting.Inherits != cl))
+                if (cel.Record != null && cel.Record.Lighting != null && (cel.Record.LightingTemplate.IsNull || cel.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cel.Record.EditorID ?? ""))
                 {
                     var nc = cel.GetOrAddAsOverride(state.PatchMod);
                     Console.WriteLine($"Patching CELL {nc.Name?.ToString() ?? nc.EditorID?.ToString()}");
@@ -82,21 +94,36 @@ namespace SynStandardLightingTemplate
                     }
                 }
             };
-
             //Blackreach weather
             var nw = state.PatchMod.Weathers.GetOrAddAsOverride(Skyrim.Weather.BlackreachWeather.Resolve(state.LinkCache));
-            nw.EffectLightingColor.Sunrise = ColorSet;
-            nw.EffectLightingColor.Day = ColorSet;
-            nw.EffectLightingColor.Sunset = ColorSet;
-            nw.EffectLightingColor.Night = ColorSet;
-            nw.FogFarColor.Sunrise = ColorSet;
-            nw.FogFarColor.Day = ColorSet;
-            nw.FogFarColor.Sunset = ColorSet;
-            nw.FogFarColor.Night = ColorSet;
-            nw.WaterMultiplierColor.Sunrise = ColorSet;
-            nw.WaterMultiplierColor.Day = ColorSet;
-            nw.WaterMultiplierColor.Sunset = ColorSet;
-            nw.WaterMultiplierColor.Night = ColorSet;
+            nw.EffectLightingColor = new()
+            {
+                Sunrise = ColorSet,
+                Day = ColorSet,
+                Sunset = ColorSet,
+                Night = ColorSet,
+            };
+            nw.FogNearColor = new()
+            {
+                Sunrise = ColorSet,
+                Day = ColorSet,
+                Sunset = ColorSet,
+                Night = ColorSet,
+            };
+            nw.FogFarColor = new()
+            {
+                Sunrise = ColorSet,
+                Day = ColorSet,
+                Sunset = ColorSet,
+                Night = ColorSet,
+            };
+            nw.WaterMultiplierColor = new()
+            {
+                Sunrise = ColorSet,
+                Day = ColorSet,
+                Sunset = ColorSet,
+                Night = ColorSet,
+            };
             nw.FogDistanceDayFar = 0;
             nw.FogDistanceDayNear = 0;
             nw.FogDistanceNightFar = 0;
@@ -108,40 +135,49 @@ namespace SynStandardLightingTemplate
             nw.ThunderLightningFrequency = new(0.0);
             nw.PrecipitationBeginFadeIn = new(0.0);
             nw.PrecipitationEndFadeOut = new(0.0);
-            nw.Flags -= Weather.Flag.Snow;
-            nw.DirectionalAmbientLightingColors = new();
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalXMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalXPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalYMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalYPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalZMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.DirectionalZPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunrise.Specular = System.Drawing.Color.FromArgb(0, 0, 0);
-            nw.DirectionalAmbientLightingColors.Sunrise.Scale = 0;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalXMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalXPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalYMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalYPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalZMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.DirectionalZPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Day.Specular = System.Drawing.Color.FromArgb(0, 0, 0);
-            nw.DirectionalAmbientLightingColors.Day.Scale = 0;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalXMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalXPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalYMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalYPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalZMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.DirectionalZPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Sunset.Specular = System.Drawing.Color.FromArgb(0, 0, 0);
-            nw.DirectionalAmbientLightingColors.Sunset.Scale = 0;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalXMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalXPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalYMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalYPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalZMinus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.DirectionalZPlus = ColorSet;
-            nw.DirectionalAmbientLightingColors.Night.Specular = System.Drawing.Color.FromArgb(0, 0, 0);
-            nw.DirectionalAmbientLightingColors.Night.Scale = 0;
+            nw.DirectionalAmbientLightingColors = new()
+            {
+                Sunrise = {
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                    Specular = Color.FromArgb(0, 0, 0),
+                    Scale = 0,
+                },
+                Day = {
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                    Specular = Color.FromArgb(0, 0, 0),
+                    Scale = 0,
+                },
+                Sunset = {
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                    Specular = Color.FromArgb(0, 0, 0),
+                    Scale = 0,
+                },
+                Night = {
+                    DirectionalXMinus = ColorSet,
+                    DirectionalXPlus = ColorSet,
+                    DirectionalYMinus = ColorSet,
+                    DirectionalYPlus = ColorSet,
+                    DirectionalZMinus = ColorSet,
+                    DirectionalZPlus = ColorSet,
+                    Specular = Color.FromArgb(0, 0, 0),
+                    Scale = 0,
+                }
+            };
         }
     }
 }

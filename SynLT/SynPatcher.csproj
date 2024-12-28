@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6</TargetFramework>
+    <TargetFramework>net8</TargetFramework>
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mutagen.Bethesda" Version="0.41.0" />
-    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.25.4" />
-    <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="3.0" />
+    <PackageReference Include="Mutagen.Bethesda" Version="0.48.1" />
+    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.32.1" />
+    <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="3.4" />
   </ItemGroup>
 
 </Project>
