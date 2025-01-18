@@ -13,10 +13,10 @@ namespace SynStandardLightingTemplate
     public class Settings
     {
         public byte Color = 15;
-        public List<string> IgnoredCells = new() {
+        public List<string> IgnoredCells = [
             "WindhelmPalaceUpstairs01",
             "WindhelmPalaceUpstairs02",
-        };
+        ];
     }
     internal class Program
     {

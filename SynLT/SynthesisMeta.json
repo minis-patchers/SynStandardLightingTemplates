@@ -1,7 +1,7 @@
 {
   "Nickname": "SynLighting",
   "Visibility": "Visible",
-  "OneLineDescription": "Does the standard lighting templater",
+  "OneLineDescription": "Changes everything to standard lighting templates",
   "LongDescription": "",
   "PreferredAutoVersioning": "Default",
   "RequiredMods": [],
