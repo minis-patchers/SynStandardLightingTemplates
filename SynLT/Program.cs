@@ -12,7 +12,7 @@ namespace SynStandardLightingTemplate
 {
     public class Settings
     {
-        public byte Color = 15;
+        public byte Color = 25;
         public List<string> IgnoredCells = [
             "WindhelmPalaceUpstairs01",
             "WindhelmPalaceUpstairs02",
