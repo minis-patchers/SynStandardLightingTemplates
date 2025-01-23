@@ -7,6 +7,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using System.Linq;
 
 namespace SynStandardLightingTemplate
 {
@@ -80,20 +81,25 @@ namespace SynStandardLightingTemplate
             }
             foreach (var cel in state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache))
             {
-                if (cel.Record != null && cel.Record.Lighting != null && (cel.Record.LightingTemplate.IsNull || cel.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cel.Record.EditorID ?? ""))
+                if (cel != null && cel.Record != null && cel.Record.FormKey != null)
                 {
-                    var nc = cel.GetOrAddAsOverride(state.PatchMod);
-                    Console.WriteLine($"Patching CELL {nc.Name?.ToString() ?? nc.EditorID?.ToString()}");
-                    if (nc.LightingTemplate.IsNull)
+                    var mtx = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(cel.Record.FormKey);
+                    var cell = mtx.Last(x => !x.Record.MajorFlags.HasFlag((Cell.MajorFlag)0x1000));
+                    if (cell.Record != null && cell.Record.Lighting != null && (cell.Record.LightingTemplate.IsNull || cell.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cell.Record.EditorID ?? ""))
                     {
-                        nc.LightingTemplate.SetTo(Skyrim.LightingTemplate.DefaultLightingTemplate);
-                    }
-                    if (nc.Lighting != null && nc.Lighting.Inherits != cl)
-                    {
-                        nc.Lighting.Inherits = cl;
+                        var nc = cell.GetOrAddAsOverride(state.PatchMod);
+                        Console.WriteLine($"Patching CELL {nc.Name?.ToString() ?? nc.EditorID?.ToString()}");
+                        if (nc.LightingTemplate.IsNull)
+                        {
+                            nc.LightingTemplate.SetTo(Skyrim.LightingTemplate.DefaultLightingTemplate);
+                        }
+                        if (nc.Lighting != null && nc.Lighting.Inherits != cl)
+                        {
+                            nc.Lighting.Inherits = cl;
+                        }
                     }
                 }
-            };
+            }
             //Blackreach weather
             var nw = state.PatchMod.Weathers.GetOrAddAsOverride(Skyrim.Weather.BlackreachWeather.Resolve(state.LinkCache));
             nw.EffectLightingColor = new()
