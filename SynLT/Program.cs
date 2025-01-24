@@ -40,13 +40,13 @@ namespace SynStandardLightingTemplate
         }
 
         public static IModContext<ISkyrimMod, ISkyrimModGetter, TMajor, TMajorGetter>? GetNonpartial<TMajor, TMajorGetter>(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, FormKey edid)
-        where TMajor : class, IMajorRecordQueryable, TMajorGetter
-        where TMajorGetter : class, IMajorRecordQueryableGetter
+        where TMajor : class, IMajorRecordQueryable, TMajorGetter, ISkyrimMajorRecord
+        where TMajorGetter : class, IMajorRecordQueryableGetter, ISkyrimMajorRecordGetter
         {
-            var links = state.LoadOrder.PriorityOrder.AsParallel().Where(x => x.Mod != null).Select(x => x.Mod!.ToImmutableLinkCache<ISkyrimMod, ISkyrimModGetter>()).Where(x => x.TryResolveContext<TMajor, TMajorGetter>(edid, out var _)).Select(x => x.ResolveContext<ICell, ICellGetter>(edid)).Where(x => !x.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000));
+            var links = state.LoadOrder.PriorityOrder.AsParallel().Where(x => x.Mod != null).Select(x => x.Mod!.ToImmutableLinkCache<ISkyrimMod, ISkyrimModGetter>()).Where(x => x.TryResolveContext<TMajor, TMajorGetter>(edid, out var _)).Select(x => x.ResolveContext<TMajor, TMajorGetter>(edid)).Where(x => !x.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000));
             if (links.Any())
             {
-                return (IModContext<ISkyrimMod, ISkyrimModGetter, TMajor, TMajorGetter>)links.Last();
+                return links.Last();
             }
             return null;
         }
