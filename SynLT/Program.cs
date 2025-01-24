@@ -1,16 +1,13 @@
 using System;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
-using System.Linq;
-using Mutagen.Bethesda.Plugins.Cache;
-using Mutagen.Bethesda.Plugins;
-using Mutagen.Bethesda.Plugins.Records;
 
 namespace SynStandardLightingTemplate
 {
@@ -22,7 +19,7 @@ namespace SynStandardLightingTemplate
             "WindhelmPalaceUpstairs02",
         ];
     }
-    internal class Program
+    class Program
     {
         public static Lazy<Settings>? LazySettings;
         public static Settings Config => LazySettings!.Value;
@@ -39,17 +36,6 @@ namespace SynStandardLightingTemplate
                 .Run(args);
         }
 
-        public static IModContext<ISkyrimMod, ISkyrimModGetter, TMajor, TMajorGetter>? GetNonpartial<TMajor, TMajorGetter>(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, FormKey edid)
-        where TMajor : class, IMajorRecordQueryable, TMajorGetter, ISkyrimMajorRecord
-        where TMajorGetter : class, IMajorRecordQueryableGetter, ISkyrimMajorRecordGetter
-        {
-            var links = state.LoadOrder.PriorityOrder.AsParallel().Where(x => x.Mod != null).Select(x => x.Mod!.ToImmutableLinkCache<ISkyrimMod, ISkyrimModGetter>()).Where(x => x.TryResolveContext<TMajor, TMajorGetter>(edid, out var _)).Select(x => x.ResolveContext<TMajor, TMajorGetter>(edid)).Where(x => !x.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000));
-            if (links.Any())
-            {
-                return links.Last();
-            }
-            return null;
-        }
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             ColorSet = Color.FromArgb(Config.Color, Config.Color, Config.Color);
@@ -94,18 +80,12 @@ namespace SynStandardLightingTemplate
                     DirectionalZPlus = ColorSet,
                 };
             }
-            foreach (var cel in state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache))
+            foreach (var ctx in state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache))
             {
-                if (cel != null && cel.Record != null && cel.Record.FormKey != null)
+                if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null)
                 {
-                    var cell = cel;
-                    if (cel.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000))
-                    {
-                        Console.WriteLine($"[WARN] Getting non-partial Cell {cell.Record.FormKey} (This is slow!)");
-                        var tmp = GetNonpartial<ICell, ICellGetter>(state, cel.Record.FormKey);
-                        cell = tmp ?? cell;
-                    }
-                    if (cell.Record != null && cell.Record.Lighting != null && (cell.Record.LightingTemplate.IsNull || cell.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cell.Record.EditorID ?? ""))
+                    var cell = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(ctx.Record.FormKey).Where(x => (x.Record.MajorRecordFlagsRaw & 0x4000) == 0).First();
+                    if (cell != null && cell.Record != null && cell.Record.Lighting != null && (cell.Record.LightingTemplate.IsNull || cell.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cell.Record.EditorID ?? ""))
                     {
                         var nc = cell.GetOrAddAsOverride(state.PatchMod);
                         Console.WriteLine($"Patching CELL {nc.Name?.ToString() ?? nc.EditorID?.ToString()}");
