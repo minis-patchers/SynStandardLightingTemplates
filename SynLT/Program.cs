@@ -10,6 +10,7 @@ using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using System.Linq;
 using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins;
+using Mutagen.Bethesda.Plugins.Records;
 
 namespace SynStandardLightingTemplate
 {
@@ -38,12 +39,14 @@ namespace SynStandardLightingTemplate
                 .Run(args);
         }
 
-        public static IModContext<ISkyrimMod, ISkyrimModGetter, ICell, ICellGetter>? GetNonpartialCell(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, FormKey edid)
+        public static IModContext<ISkyrimMod, ISkyrimModGetter, TMajor, TMajorGetter>? GetNonpartial<TMajor, TMajorGetter>(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, FormKey edid)
+        where TMajor : class, IMajorRecordQueryable, TMajorGetter
+        where TMajorGetter : class, IMajorRecordQueryableGetter
         {
-            var links = state.LoadOrder.PriorityOrder.AsParallel().Where(x => x.Mod != null).Select(x => x.Mod!.ToImmutableLinkCache<ISkyrimMod, ISkyrimModGetter>()).Where(x => x.TryResolveContext<ICell, ICellGetter>(edid, out var _)).Select(x => x.ResolveContext<ICell, ICellGetter>(edid)).Where(x => !x.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000));
+            var links = state.LoadOrder.PriorityOrder.AsParallel().Where(x => x.Mod != null).Select(x => x.Mod!.ToImmutableLinkCache<ISkyrimMod, ISkyrimModGetter>()).Where(x => x.TryResolveContext<TMajor, TMajorGetter>(edid, out var _)).Select(x => x.ResolveContext<ICell, ICellGetter>(edid)).Where(x => !x.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000));
             if (links.Any())
             {
-                return links.Last();
+                return (IModContext<ISkyrimMod, ISkyrimModGetter, TMajor, TMajorGetter>)links.Last();
             }
             return null;
         }
@@ -98,7 +101,7 @@ namespace SynStandardLightingTemplate
                     var cell = cel;
                     if (cel.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000))
                     {
-                        var tmp = GetNonpartialCell(state, cel.Record.FormKey);
+                        var tmp = GetNonpartial<ICell, ICellGetter>(state, cel.Record.FormKey);
                         cell = tmp ?? cell;
                     }
                     if (cell.Record != null && cell.Record.Lighting != null && (cell.Record.LightingTemplate.IsNull || cell.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cell.Record.EditorID ?? ""))
