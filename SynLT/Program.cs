@@ -101,6 +101,7 @@ namespace SynStandardLightingTemplate
                     var cell = cel;
                     if (cel.Record.SkyrimMajorRecordFlags.HasFlag((SkyrimMajorRecord.SkyrimMajorRecordFlag)0x4000))
                     {
+                        Console.WriteLine($"[WARN] Getting non-partial Cell {cell.Record.FormKey} (This is slow!)");
                         var tmp = GetNonpartial<ICell, ICellGetter>(state, cel.Record.FormKey);
                         cell = tmp ?? cell;
                     }
