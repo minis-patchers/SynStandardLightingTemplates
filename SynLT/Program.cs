@@ -8,6 +8,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Noggog;
 
 namespace SynStandardLightingTemplate
 {
@@ -80,15 +81,16 @@ namespace SynStandardLightingTemplate
                     DirectionalZPlus = ColorSet,
                 };
             }
-            foreach (var ctx in state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache))
+            state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache).ForEach(ctx =>
             {
-                if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null)
+                if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null && !Config.IgnoredCells.Contains(ctx.Record.EditorID ?? ""))
                 {
-                    var cell = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(ctx.Record.FormKey).Where(x => (x.Record.MajorRecordFlagsRaw & 0x4000) == 0).First();
-                    if (cell != null && cell.Record != null && cell.Record.Lighting != null && (cell.Record.LightingTemplate.IsNull || cell.Record.Lighting.Inherits != cl) && !Config.IgnoredCells.Contains(cell.Record.EditorID ?? ""))
+                    var cx = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(ctx.Record.FormKey).Where(x => (x.Record.MajorRecordFlagsRaw & 0x4000) == 0);
+                    var nctx = (ctx.Record.MajorRecordFlagsRaw & 0x4000) == 0x4000 ? cx.First() : ctx;
+                    if (nctx.Record.Lighting != null)
                     {
-                        var nc = cell.GetOrAddAsOverride(state.PatchMod);
-                        Console.WriteLine($"Patching CELL {nc.Name?.ToString() ?? nc.EditorID?.ToString()}");
+                        Console.WriteLine($"Patching Cell FROM {nctx.ModKey} {nctx.Record.MajorRecordFlagsRaw}");
+                        var nc = nctx.GetOrAddAsOverride(state.PatchMod);
                         if (nc.LightingTemplate.IsNull)
                         {
                             nc.LightingTemplate.SetTo(Skyrim.LightingTemplate.DefaultLightingTemplate);
@@ -99,7 +101,7 @@ namespace SynStandardLightingTemplate
                         }
                     }
                 }
-            }
+            });
             //Blackreach weather
             var nw = state.PatchMod.Weathers.GetOrAddAsOverride(Skyrim.Weather.BlackreachWeather.Resolve(state.LinkCache));
             nw.EffectLightingColor = new()
