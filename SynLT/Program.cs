@@ -89,7 +89,7 @@ namespace SynStandardLightingTemplate
                     var nctx = (ctx.Record.MajorRecordFlagsRaw & 0x4000) == 0x4000 ? cx.First() : ctx;
                     if (nctx.Record.Lighting != null)
                     {
-                        Console.WriteLine($"Patching Cell FROM {nctx.ModKey} {nctx.Record.MajorRecordFlagsRaw}");
+                        Console.WriteLine($"Patching Cell {nctx.Record.EditorID}");
                         var nc = nctx.GetOrAddAsOverride(state.PatchMod);
                         if (nc.LightingTemplate.IsNull)
                         {
