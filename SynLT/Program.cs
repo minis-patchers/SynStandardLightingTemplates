@@ -85,8 +85,9 @@ namespace SynStandardLightingTemplate
             {
                 if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null && !Config.IgnoredCells.Contains(ctx.Record.EditorID ?? ""))
                 {
-                    var cx = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(ctx.Record.FormKey).Where(x => (x.Record.MajorRecordFlagsRaw & 0x4000) == 0);
-                    var nctx = (ctx.Record.MajorRecordFlagsRaw & 0x4000) == 0x4000 ? cx.First() : ctx;
+                    //var cx = state.LinkCache.ResolveAllContexts<ICell, ICellGetter>(ctx.Record.FormKey).Where(x => !x.Record.MajorFlags.HasFlag((Cell.MajorFlag)0x4000));
+                    //var nctx = ctx.Record.MajorFlags.HasFlag((Cell.MajorFlag)0x4000) ? cx.First() : ctx;
+                    var nctx = ctx;
                     if (nctx.Record.Lighting != null)
                     {
                         Console.WriteLine($"Patching Cell {nctx.Record.EditorID}");
