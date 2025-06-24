@@ -10,7 +10,7 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Noggog;
 
-namespace SynStandardLightingTemplate
+namespace SynPatcher
 {
     public class Settings
     {
