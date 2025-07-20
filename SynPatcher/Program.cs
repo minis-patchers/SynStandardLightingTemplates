@@ -13,7 +13,7 @@ namespace SynPatcher
 {
     public class Settings
     {
-        public byte Color = 25;
+        public byte Brightness = 25;
         public List<string> IgnoredCells = [
             "WindhelmPalaceUpstairs01",
             "WindhelmPalaceUpstairs02",
@@ -38,25 +38,24 @@ namespace SynPatcher
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            ColorSet = Color.FromArgb(Config.Color, Config.Color, Config.Color);
+            ColorSet = Color.FromArgb(Config.Brightness, Config.Brightness, Config.Brightness);
             foreach (var lt in state.LoadOrder.PriorityOrder.LightingTemplate().WinningContextOverrides())
             {
-                Console.WriteLine($"Patching LIGHTING TEMPLATE {lt.Record.EditorID}");
                 var nlt = lt.GetOrAddAsOverride(state.PatchMod);
-                nlt.DirectionalRotationZ = 90;
                 nlt.DirectionalRotationXY = 0;
-                nlt.FogNear = 0;
-                nlt.FogFar = 0;
+                nlt.DirectionalRotationZ = 90;
                 nlt.DirectionalFade = 0;
+                nlt.DirectionalColor = ColorSet;
+                nlt.LightFadeStartDistance = 4000;
+                nlt.LightFadeEndDistance = 5000;
                 nlt.FogPower = 1;
                 nlt.FogMax = 1;
-                nlt.FogClipDistance = 0;
-                nlt.LightFadeEndDistance = 41000;
-                nlt.LightFadeStartDistance = 30000;
-                nlt.AmbientColor = ColorSet;
-                nlt.DirectionalColor = ColorSet;
-                nlt.FogNearColor = ColorSet;
+                nlt.FogNear = 600;
+                nlt.FogFar = 10000;
+                nlt.FogClipDistance = 6000;
+                nlt.FogNearColor = Color.FromArgb(0, 0, 0);
                 nlt.FogFarColor = Color.FromArgb(0, 0, 0);
+                nlt.AmbientColor = ColorSet;
                 nlt.AmbientColors = new()
                 {
                     Scale = 0,
@@ -82,17 +81,39 @@ namespace SynPatcher
             }
             state.LoadOrder.PriorityOrder.Cell().WinningContextOverrides(state.LinkCache).ForEach(ctx =>
             {
-                if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null && ctx.Record.Lighting != null && !Config.IgnoredCells.Contains(ctx.Record.EditorID ?? ""))
+                if (ctx != null && ctx.Record != null && ctx.Record.FormKey != null && !Config.IgnoredCells.Contains(ctx.Record.EditorID ?? ""))
                 {
-                    Console.WriteLine($"Patching Cell {ctx.Record.Name} {ctx.Record.EditorID}");
                     var nc = ctx.GetOrAddAsOverride(state.PatchMod);
                     if (nc.LightingTemplate.IsNull)
                     {
                         nc.LightingTemplate.SetTo(Skyrim.LightingTemplate.DefaultLightingTemplate);
                     }
-                    if (nc.Lighting != null && nc.Lighting.Inherits != cl)
+                    if (nc.Lighting != null)
                     {
                         nc.Lighting.Inherits = cl;
+                        nc.Lighting.AmbientColor = ColorSet;
+                        nc.Lighting.AmbientColors = new()
+                        {
+                            DirectionalXMinus = ColorSet,
+                            DirectionalXPlus = ColorSet,
+                            DirectionalYMinus = ColorSet,
+                            DirectionalYPlus = ColorSet,
+                            DirectionalZMinus = ColorSet,
+                            DirectionalZPlus = ColorSet,
+                        };
+                        nc.Lighting.DirectionalColor = ColorSet;
+                        nc.Lighting.DirectionalRotationXY = 0;
+                        nc.Lighting.DirectionalRotationZ = 90;
+                        nc.Lighting.DirectionalFade = 0;
+                        nc.Lighting.FogFarColor = Color.FromArgb(0, 0, 0);
+                        nc.Lighting.FogNearColor = Color.FromArgb(0, 0, 0);
+                        nc.Lighting.FogClipDistance = 6000;
+                        nc.Lighting.FogNear = 600;
+                        nc.Lighting.FogFar = 10000;
+                        nc.Lighting.FogPower = 1;
+                        nc.Lighting.FogMax = 1;
+                        nc.Lighting.LightFadeBegin = 4000;
+                        nc.Lighting.LightFadeEnd = 5000;
                     }
                 }
             });
